@@ -1,0 +1,437 @@
+#define _BSD_SOURCE
+#define NUM_ARGS 3
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+#include <pthread.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <libgen.h>
+
+char* server_IP;
+int server_port;
+
+int max_data = 0;
+
+int sock_g;
+
+char canidate_names[4096][4096] = { NULL };
+int canidate_votes[4096] = { NULL };; 
+
+char *trimwhitespace(char *str)
+{
+  char *end;
+  // Trim leading space
+  while(isspace((unsigned char)*str)) str++;
+
+  if(*str == 0)  // All spaces?
+    return str;
+
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+
+  while(end > str && isspace((unsigned char)*end)) end--;
+
+  // Write new null terminator
+  *(end+1) = 0;
+
+  return str;
+}
+
+
+//function splits your string with specified delimiter
+int makeargv(const char *s, const char *delimiters, char ***argvp)
+{
+// this function splits your string with specified delimiter
+    int error;
+    int i;
+    int numtokens;
+    const char *snew;
+    char *t;
+                char *lasts;
+
+    if ((s == NULL) || (delimiters == NULL) || (argvp == NULL)) {
+
+        errno = EINVAL;
+        return -1;
+
+    }
+
+    *argvp = NULL;              // already assigned as a new var, just blanking out
+
+    snew = s + strspn(s, delimiters);
+
+    if ((t = malloc(strlen(snew) + 1)) == NULL)
+        return -1;
+
+    strcpy(t, snew);
+
+    numtokens = 0;
+
+    if (strtok_r(t, delimiters,&lasts) != NULL)  // count number of tokens in s
+        for (numtokens = 1; strtok_r(NULL, delimiters,&lasts) != NULL; numtokens++) ;
+
+    // create arg array for pointers to tokens
+    if ((*argvp = malloc((numtokens + 1) * sizeof(char *))) == NULL) {
+        error = errno;
+        free(t);
+        errno = error;
+        return -1;
+    }
+    // insert pointers to tokens into the arg array
+    if (numtokens == 0)
+        free(t);
+
+    else {
+        strcpy(t, snew);
+        **argvp = strtok_r(t, delimiters,&lasts);
+        for (i = 1; i < numtokens; i++)
+            *((*argvp) + i) = strtok_r(NULL, delimiters,&lasts);
+    }
+
+    *((*argvp) + numtokens) = NULL;     // put in final NULL pointer
+
+    return numtokens;
+}
+
+//eod of copy
+
+void count_vote(char* name){
+  trimwhitespace(name);
+//  printf("Counting %s\n",name);
+  int i =0;
+  
+  while(canidate_votes[i] != 0 && strcmp(canidate_names[i], name)){
+//    printf(" '%s' is not '%s' \n",canidate_names[i], name);  
+    i++;
+  }
+  if(canidate_votes[i] == 0){
+   //create new slot
+   strcpy(canidate_names[i],name);
+   canidate_votes[i] = 1;
+  }
+  else{
+//    printf(" '%s' is '%s' \n",canidate_names[i], name);
+   canidate_votes[i]++;
+  }
+}
+
+
+void leafcounter(char* file){
+ //printf("Starting to count votes in file: %s\n",file);
+ //char* out;
+ //strcat(file,".out");
+ FILE* fp;
+                char* vote = malloc(1024);
+                size_t len = 0;
+                ssize_t read;
+		printf("Opening file\n");
+		char cwd[1024];
+   if (getcwd(cwd, sizeof(cwd)) != NULL)
+  //     fprintf(stdout, "Current working dir: %s\n", cwd);
+		strcat(cwd,"/");
+		strcat(cwd,file);
+//		fprintf(stdout, "Opening: %s\n", cwd);
+		trimwhitespace(cwd);
+                fp = fopen(cwd, "r");
+		perror("Opening file ");
+                 while ((read = getline(&vote, &len, fp)) != -1) {
+//			printf("Read line\n");
+                        char* tmp;
+                        tmp = malloc(1024);
+                        strcpy(tmp,vote);
+                        count_vote(tmp);
+                    }
+                fclose(fp);
+//		printf("Canidate %s had %d votes\n",canidate_names[0],canidate_votes[0]);
+}
+
+char* cap_req(char* req){
+ for(int i=0;i<max_data;i++){
+   strcat(req," ");
+ }
+ return req;
+}
+
+void print_file_into_data(char* code){
+   int i = 0;
+   while(canidate_votes[i] != 0){
+//	printf("CODE is %s\n",code);
+        strcat(code,canidate_names[i]);
+//	printf("CODE is %s\n",code);
+	strcat(code,":");
+//	printf("CODE is %s\n",code);
+	char tmp[4096];
+	sprintf(tmp,"%d",canidate_votes[i]);
+//	printf("tmp is %s\n",tmp);
+	strcat(code,tmp);
+//	printf("CODE is %s\n",code);
+        strcat(code,",");
+        i++;
+    }
+   
+  memset(canidate_votes,0,4096);
+  memset(canidate_names,NULL,4096);
+  code[strlen(code)-1] = '\0';
+  strcat(code,"      ");
+  printf("CODE is %s\n",code);
+  if(strlen(code) > max_data){
+     max_data = strlen(code);
+  }
+  cap_req(code);
+  write(sock_g,code,strlen(code));
+}
+
+char* StringPad(char* str){
+//printf("string pad: '%s'\n",str);
+char* tmp;
+const char *padding="               ";
+int padLen = 15 - strlen(str); // Calc Padding length
+printf("padlen is %d\n",padLen);
+sprintf(tmp, "%s%*.*s", str, padLen, padLen, padding);  // LEFT Padding 
+printf("tmp1 is %s\n",tmp);
+strcpy(str,tmp);
+//printf("string pad: '%s'\n",tmp);
+printf("str is %s\n",str);
+return str;
+}
+
+void Add_Votes(char* name, char* file){
+  printf("AV with :%s\n",name);
+  char init[4096];
+  char* tmp;
+  tmp = malloc(4096);
+  strcpy(tmp,name);
+  printf("tmp is %s\n",tmp);
+  trimwhitespace(tmp);
+  printf("tmp is %s\n",tmp);
+  StringPad(tmp);
+  printf("tmp is %s\n",tmp);
+  strcpy(init,"AV;");
+  printf("init with :%s\n",init);
+  strcat(init,tmp);
+  printf("init with :%s\n",init);
+  strcat(init,";");
+  printf("init with :%s\n",init);
+//  strcat(init,";");
+  leafcounter(file);
+  //strcat(file,".out");
+  print_file_into_data(init);
+ //  write(sock_g,code,sizeof(code));
+}
+
+void Open_Polls(char* name){
+  printf("OP with :%s\n",name);
+  char init[4096];
+  char* tmp;
+  tmp = malloc(4096);
+  
+  strcpy(tmp,name);
+  trimwhitespace(tmp);
+  StringPad(tmp); 
+  strcpy(init,"OP;");
+  printf("init with :%s\n",init);
+  strcat(init,tmp); 
+  printf("init with :%s\n",init);
+  strcat(init,";");
+  cap_req(init);
+  //init[strlen(init)] = '\0';
+  printf("Sending init with :%s: whcih is len %d\n",init,strlen(init));
+  write(sock_g,init,strlen(init));
+  //write(sock_g,"OP: we are here\0",sizeof("OP: we are here\0"))
+}
+
+void Count_Votes(char* name){
+  printf("CV with :%s\n",name);
+  char init[4096];
+  char* tmp;
+  tmp = malloc(4096);
+
+  strcpy(tmp,name);
+  trimwhitespace(tmp);
+  StringPad(tmp);
+  strcpy(init,"CV;");
+  printf("init with :%s\n",init);
+  strcat(init,tmp);
+  printf("init with :%s\n",init);
+  strcat(init,";");
+  cap_req(init);
+  printf("Sending init with :%s\n",init);
+  write(sock_g,init,strlen(init));
+}
+
+void Return_Winner(char* name){
+  printf("RW with :%s\n",name);
+  char init[4096];
+  char* tmp;
+  tmp = malloc(4096);
+
+  strcpy(tmp,name);
+  trimwhitespace(tmp);
+  StringPad(tmp);
+  strcpy(init,"RW;");
+  cap_req(init);
+  write(sock_g,init,strlen(init));
+}
+
+void Close_Polls(char* name){
+  printf("CP with :%s\n",name);
+  char init[4096];
+  char* tmp;
+  tmp = malloc(4096);
+
+  strcpy(tmp,name);
+  trimwhitespace(tmp);
+  StringPad(tmp);
+  strcpy(init,"CP;");
+  printf("init with :%s\n",init);
+  strcat(init,tmp);
+  printf("init with :%s\n",init);
+  strcat(init,";       ");
+  printf("init with :%s\n",init);
+  cap_req(init);
+  write(sock_g,init,strlen(init));
+}
+
+void Remove_Votes(char* name, char* file){
+    printf("RV with :%s\n",name);
+  char init[4096];
+  char* tmp;
+  tmp = malloc(4096);
+
+  strcpy(tmp,name);
+  trimwhitespace(tmp);
+  StringPad(tmp);
+  strcpy(init,"RV;");
+  printf("init with :%s\n",init);
+  strcat(init,tmp);
+  printf("init with :%s\n",init);
+  strcat(init,";");
+  printf("init with :%s\n",init);
+//  strcat(init,";");
+  leafcounter(file);
+  //strcat(file,".out");
+  print_file_into_data(init);
+ //  write(sock_g,code,sizeof(code));
+
+}
+
+void dispatchLine(char* str){
+  printf("DISPATCH: %s",str);
+  //makeargv
+  char delim[] = " ";
+    int flag = 0;
+    char **argvp;
+    int numtokens;
+    if ((numtokens = makeargv(str, delim, &argvp)) == -1) {
+                fprintf(stderr, "failed to parse the string you given:%s\n", str);
+                return 1;       //argvp[0] is the parent node.
+    }
+  	char* region;
+	char* file;
+	region = malloc(1024);
+	file = malloc(1024);
+	if( numtokens > 1)
+	region = argvp[1];
+	if( numtokens > 2)
+	file = argvp[2];
+
+        if(strcmp("Open_Polls", argvp[0]) == 0) 
+	  Open_Polls(region);
+        else if(strcmp("Add_Votes", argvp[0]) == 0)
+          Add_Votes(region, file);
+        else if(strcmp("Count_Votes", argvp[0]) == 0)
+          Count_Votes( region);
+        else if(strcmp("Close_Polls", argvp[0]) == 0)
+          Close_Polls( region);
+        else if(strcmp("Return_Winner", argvp[0]) == 0)
+          Return_Winner( region);
+        else if(strcmp("Remove_Votes", argvp[0]) == 0)
+          Remove_Votes( region,file);
+}
+
+
+int main(int argc, char** argv) {
+
+	if (argc < NUM_ARGS + 1 || argc > NUM_ARGS + 1) {
+
+		printf("Wrong number of args, expected %d, given %d\n", NUM_ARGS, argc - 1);
+		exit(1);
+	}
+       char* tmp;
+       char* tmp1;
+       tmp = strdup(argv[1]);
+       tmp1 = strdup(argv[1]);
+       printf("Path is %s\n",tmp);
+	
+       printf("Dir is %s\n",dirname(tmp));
+       printf("File is %s\n",basename(tmp1));
+       strcpy(tmp1,basename(tmp1));	
+	chdir(tmp);
+        server_port = atoi(argv[3]);
+         printf("Dir is %s\n",tmp);
+
+	server_IP = malloc(1024);
+	server_IP = argv[2];	
+
+	// Create a TCP socket.
+	int sock = socket(AF_INET , SOCK_STREAM , 0);
+	
+	// Specify an address to connect to (we use the local host or 'loop-back' address).
+	struct sockaddr_in address;
+	address.sin_family = AF_INET;
+	address.sin_port = htons(server_port);
+	address.sin_addr.s_addr = inet_addr(server_IP);
+	
+	// Connect it.
+	if (connect(sock, (struct sockaddr *) &address, sizeof(address)) == 0) {
+	
+		// Buffer for data.
+		char buffer[256];
+		fprintf(stdout,"Initiated connection with server at %s:%d\n",server_IP,server_port);
+		sock_g = sock;
+		// Open the file.
+		FILE* fp;
+		char* vote = malloc(1024);
+		size_t len = 0;
+		ssize_t read;
+	
+                char cwd[1024];
+   if (getcwd(cwd, sizeof(cwd)) != NULL)
+       fprintf(stdout, "Current working dir: %s\n", cwd);
+		strcat(cwd,"/");
+		strcat(cwd,tmp1);
+		fprintf(stdout, "Opening: %s\n", cwd);
+		fp = fopen(cwd, "r");
+		perror("FOPEN in main");
+		 while ((read = getline(&vote, &len, fp)) != -1) {
+			char* tmp;
+			tmp = malloc(1024);
+			strcpy(tmp,vote);
+			dispatchLine(tmp);
+			//sleep(1);
+		    }
+		fclose(fp);
+//
+//		write(sock,"OP: we are here\0OP: we are here\0",sizeof("OP: we are here\0OP: we are here\0"));
+		// TODO: Read the file and write to the socket.
+	//	int n;
+	//	while ((n=read(fd,buffer,256)) > 0)
+	//	    write(sock,buffer,n);	
+		// Close the file.
+	//	close(fd);
+		close(sock);
+		fprintf(stdout,"Closed connection with server at %s:%d\n",server_IP,server_port);	
+	} else {
+	
+		perror("Connection failed!");
+	}
+}
