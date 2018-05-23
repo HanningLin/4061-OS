@@ -1,0 +1,32 @@
+/*login: tessm061 lin00116
+* date: 04/13/18
+* name: Tyler Tessmann, Hanning Lin 
+*Extra credits[YES]*/
+
+-The purpose of your program
+ -Our program read a DAG text file and built the full graph data structure. 
+ Then the program read and decrypts leaf files from the Input-directory and...
+ saves the decrypted version into the Output-Directory. 
+ The program can spawn threads to do the aggregation of intermeidate directories,
+ and store the aggregated result files from their children. 
+ The root directory contains one folder and log file which lists all our excution steps.
+
+-How to compile the program
+ -You can simply use <make> in the shell to compile the program
+-How to use the program from the syntax
+ -./votecounter DAG.txt <input_dir> <output_dir> <num_threads>
+ - OR:./votecounter DAG.txt <input_dir> <output_dir>
+
+-Your x500 and the x500 of your partner
+ -tessm061 lin00116
+
+-Your lecture section and your partner's lecture section
+ -Section 1,Section 1 (8am)
+
+-Your partner's and your individual contributions
+ -Tyler - Decrypt Function, Main, Document Checking, Thread Kickoff, EC. 
+ -Hanning - Make DAG directories, Aggregate and Findwinner.
+ -Both did minor bug fixes during code review of others code.
+
+-Specify whether you are doing the extra credit or not.
+ Yes we have succesfully implented the EC 

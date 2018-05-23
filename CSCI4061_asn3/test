@@ -1,0 +1,271 @@
+Max thread count is: 10
+about to delete dir
+about to make dir
+provisioning log
+initing log mutex
+doing str cpy
+output_dir is: TestCase01/outputdir/
+doing str cat
+opening file TestCase01/outputdir//log.txt
+logptr is 32157744 about to make thread test
+!!!!!!!111!!!!!!!
+!!!!!!!2!!!!!!!
+!!!!!!!3!!!!!!!
+!!!!!check out TestCase01/outputdir//Who_Won/Region_1
+Calling addToQueue with Sub_County_1
+Item: Sub_County_1
+Calling addToQueue with Region_2
+Item: Sub_County_1
+Item: Region_2
+Calling addToQueue with Sub_County_2
+Item: Sub_County_1
+Item: Region_2
+Item: Sub_County_2
+Calling addToQueue with Region_3
+Item: Sub_County_1
+Item: Region_2
+Item: Sub_County_2
+Item: Region_3
+Making condQueue
+Entering for loop
+Locking mutex
+Locked mutex, waiting in cur
+Dispatched thread
+Locking mutex
+Locked mutex, waiting in cur
+Dispatched thread
+We are Thread #2
+Locking mutex
+Locked mutex, waiting in cur
+Dispatched thread
+We are Thread #3
+Locking mutex
+Locked mutex, waiting in cur
+Dispatched thread
+We are Thread #4
+Got Sub_County_1 from queue
+About to get TID
+TID is 48569
+Sub_County_1:48569:start
+
+reading input now
+logptr is 32157744 about to make thread test
+logging Sub_County_1:48569:start
+ of len 25
+Got Region_2 from queue
+About to get TID
+Doing strcpy input
+Done
+input is TestCase01/inputdir/Sub_County_1
+Doing strcpy of TestCase01/outputdir/
+Doing fopens
+#######################log out[TestCase01/outputdir//Who_Won/Region_1/County_1/Sub_County_1/Sub_County_1.txt]
+TID is 48570
+Region_2:48570:start
+
+reading input now
+logptr is 32157744 about to make thread test
+logging Region_2:48570:start
+ of len 21
+Doing strcpy input
+Done
+input is TestCase01/inputdir/Region_2
+Doing strcpy of TestCase01/outputdir/
+Doing fopens
+#######################log out[TestCase01/outputdir//Who_Won/Region_2/Region_2.txt]
+Got Sub_County_2 from queue
+About to get TID
+TID is 48568
+Sub_County_2:48568:start
+
+reading input now
+logptr is 32157744 about to make thread test
+logging Sub_County_2:48568:start
+ of len 25
+Doing strcpy input
+Done
+input is TestCase01/inputdir/Sub_County_2
+Doing strcpy of TestCase01/outputdir/
+Doing fopens
+#######################log out[TestCase01/outputdir//Who_Won/Region_1/County_1/Sub_County_2/Sub_County_2.txt]
+Writing to TestCase01/outputdir//Who_Won/Region_2/Region_2.txt
+Writing to TestCase01/outputdir//Who_Won/Region_1/County_1/Sub_County_1/Sub_County_1.txt
+Writing to TestCase01/outputdir//Who_Won/Region_1/County_1/Sub_County_2/Sub_County_2.txt
+About to decrypt
+Processing ..65..
+::C::
+::C::
+Buffer is CAbout to decrypt
+Processing ..66..
+::D::
+::D::
+Buffer is DAbout to decrypt
+Processing ..68..
+::F::
+::F::
+Buffer is FAbout to decrypt
+Processing ..68..
+::F::
+::F::
+Buffer is FAbout to decrypt
+Processing ..68..
+::F::
+::F::
+Buffer is FAbout to decrypt
+Processing ..67..
+::E::
+::E::
+Buffer is EAbout to decrypt
+Processing ..67..
+::E::
+::E::
+Buffer is EDone with file
+Done with closing in
+About to decrypt
+Processing ..65..
+::C::
+::C::
+Buffer is CAbout to decrypt
+Processing ..65..
+::C::
+::C::
+Buffer is CAbout to decrypt
+Processing ..66..
+::D::
+::D::
+Buffer is DAbout to decrypt
+About to decrypt
+Processing ..66..
+Processing ..67..
+::D::
+::E::
+::E::
+::D::
+Buffer is DBuffer is EAbout to decrypt
+Processing ..68..
+About to decrypt
+::F::
+::F::
+Processing ..68..
+Buffer is F::F::
+::F::
+Buffer is FAbout to decrypt
+Processing ..68..
+About to decrypt
+::F::
+::F::
+Processing ..68..
+Buffer is F::F::
+About to decrypt
+Processing ..68..
+::F::
+Buffer is F::F::
+About to decrypt
+::F::
+Buffer is FProcessing ..68..
+About to decrypt
+::F::
+Processing ..68..
+::F::
+::F::
+::F::
+Buffer is FBuffer is FAbout to decrypt
+Processing ..67..
+::E::
+::E::
+Buffer is EAbout to decrypt
+Done with file
+Processing ..67..
+::E::
+::E::
+Buffer is EAbout to decrypt
+Processing ..67..
+::E::
+::E::
+Buffer is EAbout to decrypt
+Processing ..67..
+::E::
+::E::
+Buffer is EAbout to decrypt
+Processing ..67..
+::E::
+::E::
+Done with closing in
+Buffer is EAbout to decrypt
+Processing ..67..
+::E::
+::E::
+Buffer is EDone with file
+Done with closing in
+Done with closing out
+Done with closing out
+Done with closing out
+logptr is 32157744 about to make thread test
+logging Region_2:48570:end
+ of len 19
+deinc cur threads
+cond signal
+We are Thread #3
+Got Region_3 from queue
+About to get TID
+TID is 48571
+Region_3:48571:start
+
+reading input now
+logptr is 32157744 about to make thread test
+logging Region_3:48571:start
+ of len 21
+Doing strcpy input
+Done
+input is TestCase01/inputdir/Region_3
+Doing strcpy of TestCase01/outputdir/
+Doing fopens
+#######################log out[TestCase01/outputdir//Who_Won/Region_3/Region_3.txt]
+Writing to TestCase01/outputdir//Who_Won/Region_3/Region_3.txt
+About to decrypt
+Processing ..65..
+::xCTz::
+::xCTz::
+Buffer is xCTzAbout to decrypt
+Processing ..68..
+::xFTz::
+::xFTz::
+Buffer is xFTzAbout to decrypt
+Processing ..68..
+::xF::
+::xF::
+Buffer is xFAbout to decrypt
+Processing ..68..
+::xF::
+::xF::
+Buffer is xFAbout to decrypt
+Processing ..67..
+::xE::
+::xE::
+Buffer is xEAbout to decrypt
+Processing ..66..
+::xD::
+::xD::
+Buffer is xDAbout to decrypt
+Processing ..66..
+::xD::
+::xD::
+Buffer is xDDone with file
+Done with closing in
+Done with closing out
+logptr is 32157744 about to make thread test
+logging Region_3:48571:end
+ of len 19
+deinc cur threads
+cond signal
+logptr is 32157744 about to make thread test
+logging Sub_County_2:48568:end
+ of len 23
+deinc cur threads
+cond signal
+logptr is 32157744 about to make thread test
+logging Sub_County_1:48569:end
+ of len 23
+deinc cur threads
+cond signal
+About to return 0

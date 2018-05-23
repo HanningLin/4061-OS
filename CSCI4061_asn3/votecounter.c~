@@ -1,0 +1,553 @@
+/*login: tessm061 lin00116
+* date: 02/18/18
+* name: Tyler Tessmann, Hanning Lin */
+
+/*
+ * VCforStudents.c
+ *
+ *  Created on: Feb 2, 2018
+ *      Author: ayushi
+ */
+#define _BSD_SOURCE
+
+#include <stdio.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <string.h>
+#include <time.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <sys/stat.h>
+#include <errno.h>
+
+#define MAX_STR_SIZE 1024
+#define MAX_FILEPATH 4096
+
+typedef struct dir {
+    char name[MAX_STR_SIZE];    //Number of votes for the canidate
+    char path[MAX_STR_SIZE];    //Name of canidate
+    struct dir *next;           //Next canidate node
+    struct dir *prev;           // previous canidate node
+} dir_node;
+
+dir_node *publicroot;
+
+pthread_mutex_t logMutex;
+pthread_mutex_t queueMutex;
+
+FILE *LogPTR;
+char *output_dir;
+char *input_dir;
+char **DSQ;
+int LENGTH = 0;
+int currentGrab = 0;
+
+void readInput(filename)
+{
+    char *file = malloc(1024);
+    char *out_s = malloc(1024);
+    printf("Doing strcpy out\n");
+    dir_node *temp_node;
+    temp_node = publicroot;
+    int flag = 0;
+    if (!strcmp(temp_node->name, filename)) {
+        //printf("in if name is [%s]\n",temp_node->name);
+        strcpy(out_s, temp_node->path);
+        flag = 1;
+    }
+    while (temp_node->next != NULL) {
+        temp_node = temp_node->next;
+        //printf("in while name is [%s],root is [%s]\n",temp_node->name,argvp[0]);
+        if (!strcmp(temp_node->name, filename)) {
+            //printf("in if name is [%s]\n",temp_node->name);
+            strcpy(out_s, temp_node->path);
+            flag = 1;
+        }
+    }
+    if (flag == 0) {
+
+        exit(1);
+    } else {
+        strcat(out_s, "/");
+        strcat(out_s, filename);
+        strcat(out_s, ".txt");
+    }
+    printf("Doing strcpy input\n");
+    strcpy(file, input_dir);
+    printf("Done\n");
+    strcat(file, filename);
+    printf("input is %s\nDoing strcpy of %s\n", file, output_dir);
+    //strcpy(out_s,input_dir);
+    printf("Doing fopens\n");
+    printf("#######################log out[%s]\n", out_s);
+    FILE *Fout = fopen(out_s, "w+");
+    printf("Writing to %s\n", out_s);
+    FILE *in = fopen(file, "r");
+    if (in && Fout) {
+        char *buffer = malloc(1024);
+        size_t len = 0;
+        ssize_t read;
+        while ((read = getline(&buffer, &len, in)) != -1) {
+            printf("About to decrypt\n");
+            decryptString(buffer);
+            printf("Buffer is %s", buffer);
+            strcat(buffer, "\n");
+            fwrite(buffer, 1, strlen(buffer), Fout);
+        }
+        printf("Done with file\n");
+        fclose(in);
+        printf("Done with closing in\n");
+        fclose(Fout);
+    }
+    printf("Done with closing out\n");
+}
+
+char *getNameFromQueue()
+{
+    char *name;
+    name = malloc(1024);
+    pthread_mutex_lock(&(queueMutex));
+    name = DSQ[currentGrab];
+    currentGrab++;
+    pthread_mutex_unlock(&(queueMutex));
+    return name;
+}
+
+void runThread()
+{
+    char *file;
+    file = malloc(1024);
+    file = getNameFromQueue();
+    printf("Got %s from queue\n", file);
+    //TODO unlock mutux
+    printf("About to get TID\n");
+    char tids[32];
+    pid_t tid;
+    tid = syscall(SYS_gettid);
+    sprintf(tids, "%ld", tid);
+    printf("TID is %s\n", tids);
+    char *log_entry = malloc(1000);
+    strcpy(log_entry, file);
+    strcat(log_entry, ":");
+    strcat(log_entry, tids);
+    strcat(log_entry, ":start\n");
+    printf("%s\nreading input now\n", log_entry);
+    writeToLog(log_entry);
+    readInput(file);
+    strcpy(log_entry, file);
+    strcat(log_entry, ":");
+    strcat(log_entry, tids);
+    strcat(log_entry, ":end\n");
+    writeToLog(log_entry);
+}
+
+/*
+void tmp_Test(){
+ pthread_t test;
+ printf("Making struct\n");
+ struct regionStruct* dep = (struct regionStruct*) malloc(sizeof(struct regionStruct));
+ printf("Making filename\n");
+ dep->filename = malloc(1024);
+ strcpy(dep->filename,"Sub_County_1");
+ printf("Making thread\n");
+ pthread_create(&test, NULL, runThread, (void*) dep);
+ pthread_join(test, NULL);
+ printf("Done with closing thread\n");
+}
+*/
+void writeToLog(char *data)
+{
+    printf("logptr is %d about to make thread test\n", LogPTR);
+    pthread_mutex_lock(&(logMutex));
+    printf("logging %s of len %d\n", data, strlen(data));
+    fwrite(data, 1, strlen(data), LogPTR);
+    perror("fwrite is");
+    pthread_mutex_unlock(&(logMutex));
+}
+
+void removeDIR(char *path)
+{
+  DIR *dir = opendir(path);
+  struct dirent *ent;
+  int i =0;
+  char *full_path;
+  struct stat stat_data;
+  while ((ent = readdir(dir)) != NULL) {
+   if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
+    continue;
+   strcpy(full_path, path);
+        strcat(full_path, "/");
+        strcat(full_path, ent->d_name);
+
+   stat(full_path, &stat_data);
+
+        if (S_ISDIR(stat_data.st_mode) != 0) {
+            removeDIR(full_path);
+            continue;
+        }
+   unlink(full_path);  
+  }
+  rmdir(path);
+  closedir(dir);
+}
+
+int checkFileAccess(char *filename)
+{
+    return (access(filename, F_OK) != -1);
+}
+
+int checkDirAccess(char *path)
+{
+    DIR *dir = opendir(path);
+    if (dir) {
+        /* Directory exists. */
+        closedir(dir);
+        return 1;
+    }
+    return 0;
+}
+
+void decryptString(char *str)
+{
+    char *fin;
+    fin = malloc(sizeof(str));
+    for (int i = 0; str[i] != '\0' && str[i] != 10; i++) {
+        printf("Processing ..%d..\n", str[i]);
+        int tmp = str[i];
+        if (tmp == 'y')
+            strcat(fin, "a");
+        else if (tmp == 'z')
+            strcat(fin, "b");
+        else {
+            tmp = tmp + 2;
+            fin[strlen(fin)] = tmp;
+            printf("::%s::\n", fin);
+        }
+    }
+    printf("::%s::\n", fin);
+    strcpy(str, fin);
+    return fin;
+}
+
+void addToQueue(char *name)
+{
+    char *fin;
+    fin = malloc(sizeof(name));
+    strcpy(fin, name);
+    printf("Calling addToQueue with %s\n", name);
+    DSQ[LENGTH] = malloc(sizeof(fin));
+    DSQ[LENGTH] = fin;
+    LENGTH++;
+    for (int i = 0; i < LENGTH; i++) {
+        printf("Item: %s\n", DSQ[i]);
+    }
+}
+
+void decryptAll()
+{
+    struct dirent *pDirent;
+    DIR *pDir;
+    pDir = opendir(input_dir);
+    if (pDir == NULL) {
+        perror("Dir cannot open");
+        return 1;
+    }
+    while ((pDirent = readdir(pDir)) != NULL) {
+        if (!strcmp(pDirent->d_name, ".") || !strcmp(pDirent->d_name, ".."))
+            continue;
+        else if (pDirent->d_type == DT_DIR)
+            continue;
+        else
+            addToQueue(pDirent->d_name);
+    }
+    closedir(pDir);
+    pthread_t test[100];
+    pthread_mutex_init(&(queueMutex), NULL);
+    for (int i = 0; i < LENGTH; i++) {
+        pthread_create(&test[i], NULL, runThread, NULL);
+    }
+    for (int i = 0; i < LENGTH; i++) {
+        pthread_join(test[i], NULL);
+    }
+}
+
+void initLog()
+{
+    printf("initing log mutex\n");
+    pthread_mutex_init(&(logMutex), NULL);
+    char logname[1024];
+    memset(logname, '\0', sizeof(logname));
+    printf("doing str cpy\n");
+    printf("output_dir is: %s\n", output_dir);
+    strcpy(logname, output_dir);
+    printf("doing str cat\n");
+    strcat(logname, "/log.txt");
+    LogPTR = malloc(sizeof(FILE *));
+    printf("opening file %s\n", logname);
+    LogPTR = fopen(logname, "w+");
+    chmod(logname, 0700);
+    perror("File open is");
+    //printf("logptr is %d about to make thread test\n",fp);
+    //fwrite("Log Starting\n",1,sizeof("Log Starting\n"),LogPTR);
+    //writeToLog("Log Starting\n");
+}
+
+/*******createDAG********
+*Read the input.txt and make dirs base on the file
+****************/
+int makeargv(const char *s, const char *delimiters, char ***argvp)
+{
+// this function splits your string with specified delimiter
+    int error;
+    int i;
+    int numtokens;
+    const char *snew;
+    char *t;
+
+    if ((s == NULL) || (delimiters == NULL) || (argvp == NULL)) {
+
+        errno = EINVAL;
+        return -1;
+
+    }
+
+    *argvp = NULL;              // already assigned as a new var, just blanking out
+
+    snew = s + strspn(s, delimiters);
+
+    if ((t = malloc(strlen(snew) + 1)) == NULL)
+        return -1;
+
+    strcpy(t, snew);
+
+    numtokens = 0;
+
+    if (strtok(t, delimiters) != NULL)  // count number of tokens in s
+        for (numtokens = 1; strtok(NULL, delimiters) != NULL; numtokens++) ;
+
+    // create arg array for pointers to tokens
+    if ((*argvp = malloc((numtokens + 1) * sizeof(char *))) == NULL) {
+        error = errno;
+        free(t);
+        errno = error;
+        return -1;
+    }
+    // insert pointers to tokens into the arg array
+    if (numtokens == 0)
+        free(t);
+
+    else {
+        strcpy(t, snew);
+        **argvp = strtok(t, delimiters);
+        for (i = 1; i < numtokens; i++)
+            *((*argvp) + i) = strtok(NULL, delimiters);
+    }
+
+    *((*argvp) + numtokens) = NULL;     // put in final NULL pointer
+
+    return numtokens;
+}
+
+//Create a new node of DAG node
+dir_node *create(char *name, dir_node * prev, dir_node * next)
+{
+    //Use malloc to allocate space on the heap
+    dir_node *new_node = (dir_node *) malloc(sizeof(dir_node));
+    if (new_node == NULL) {
+        fprintf(stderr, "Error creating a new node.\n");
+        _exit(0);
+    }
+    //Give it one vote
+
+    //set the name
+    strcpy(new_node->name, name);
+    new_node->next = next;
+    new_node->prev = prev;
+    // printf("Made a new node called %s\n",name);
+    return new_node;
+}
+
+int makepath(char *oldpath, char *filename, char *newpath)
+{
+    strcpy(newpath, oldpath);
+    strcat(newpath, "/");
+    strcat(newpath, filename);
+    return 0;
+}
+
+int trimlastenter(char *filename)
+{
+    int len = strlen(filename);
+    char newname[1024];
+    memset(newname, '\0', sizeof(newname));
+    if (filename[len - 1] == '\n') {
+        strncpy(newname, filename, len - 1);
+        memset(filename, '\0', sizeof(filename));
+        strcpy(filename, newname);
+    }
+    return 0;
+}
+
+dir_node *createDAG(char *filename, char *output_dir)
+{
+    if (mkdir(output_dir, 0777) == -1) {
+        perror("make directory\n");
+    }
+    printf("!!!!!!!111!!!!!!!\n");
+    FILE *fp;
+    int numtokens;
+    int i = 0;
+    fp = fopen(filename, "r");  //open the inputfile
+    if (fp == NULL) {
+        perror("Bad File Path");
+    }
+    //printf("filename is %s\n",filename);
+    chmod(filename, 0700);
+
+    size_t len = MAX_STR_SIZE;
+    ssize_t read;
+    char *buf = malloc(MAX_STR_SIZE * sizeof(char));    //set aside a chunk of memory for the buffer
+    if (buf == NULL) {
+        perror("MALLOC FAILURE\n");
+        _exit(1);
+    }
+    int linecounter = 0;        //keep a running count of what line we are on
+    char delim[] = ":";
+    int flag = 0;
+    char **argvp;
+    dir_node *temp_node;
+    dir_node *root = (dir_node *) malloc(sizeof(dir_node));
+    temp_node = root;
+    char rootpath[MAX_STR_SIZE];
+    while ((read = getline(&buf, &len, fp)) != -1) {
+        if (buf[0] == '#') {    //skip comment lines
+            printf("Skipping comment %s \n", buf);
+        } else {
+
+            if ((numtokens = makeargv(buf, delim, &argvp)) == -1) {
+                fprintf(stderr, "failed to parse the string you given:%s\n", buf);
+                return 1;       //argvp[0] is the parent node.
+            }
+            if (linecounter == 0) {     //first line
+
+                root->prev = NULL;
+                root->next = NULL;
+                strcpy(root->name, argvp[0]);
+                makepath(output_dir, argvp[0], root->path);
+                //printf("path is %s\n",root->path);
+                for (i = 1; i < numtokens; i++) {
+                    trimlastenter(argvp[i]);
+                    temp_node->next = create(argvp[i], temp_node, NULL);
+                    temp_node = temp_node->next;
+                    makepath(root->path, argvp[i], temp_node->path);
+                    //printf("path is %s\n",temp_node->path);
+                }
+            } else {            //second line
+                temp_node = root;
+                flag = 0;
+                while (temp_node->next != NULL) {
+                    temp_node = temp_node->next;
+                    //printf("in while name is [%s],root is [%s]\n",temp_node->name,argvp[0]);
+                    if (!strcmp(temp_node->name, argvp[0])) {
+                        //printf("in if name is [%s]\n",temp_node->name);
+                        strcpy(rootpath, temp_node->path);
+                        flag = 1;
+                    }
+                }
+                if (flag == 0) {
+                    printf("input file error\n");
+                    exit(1);
+                } else {
+                    for (i = 1; i < numtokens; i++) {
+                        trimlastenter(argvp[i]);
+                        temp_node->next = create(argvp[i], temp_node, NULL);
+                        temp_node = temp_node->next;
+                        makepath(rootpath, argvp[i], temp_node->path);
+                        //printf("path is %s\n",temp_node->path);
+                    }
+                }
+            }
+            linecounter++;
+
+        }
+        //root_out=root;
+        //printf("1 check out %s\n",root_out->path);
+
+    }
+    //free all the NumOfDescendant
+    temp_node = root;
+    if (mkdir(temp_node->path, 0777) == -1) {
+        perror("make directory\n");
+    }
+    printf("!!!!!!!2!!!!!!!\n");
+    while (temp_node->next != NULL) {
+        temp_node = temp_node->next;
+        if (mkdir(temp_node->path, 0777) == -1) {
+            perror("make directory\n");
+        }
+    }
+    printf("!!!!!!!3!!!!!!!\n");
+    return root;
+}
+
+int main(int argc, char **argv)
+{
+    //Allocate space for MAX_NODES to node pointer
+    if (argc < 4 || argc > 5) { //if there isnt 2 args, fail now and show proper usage
+        printf("Usage: %s Program <DAG.txt> <input_dir> <output_dir>\n", argv[0]);
+        printf("Try %s DAG.txt in out\n", argv[0]);
+        return -1;              //exit in failure
+    }
+
+    DSQ = malloc(1024);
+
+    char *filename = malloc(sizeof(argv[1]));
+    filename = argv[1];
+
+    input_dir = malloc(MAX_FILEPATH);
+    input_dir = argv[2];
+
+    output_dir = malloc(MAX_FILEPATH);
+    output_dir = argv[3];
+
+    //Where we read in the dag, and make it
+    publicroot = createDAG(filename, output_dir);
+    printf("!!!!!check out %s\n", (publicroot->next)->path);
+    //End of DAG making
+
+    int DAG_exists = checkFileAccess(filename);
+    if (!DAG_exists) {
+        perror("Input FILE does not exist");
+        _exit(1);
+    }
+    int inputExists = checkDirAccess(input_dir);
+    if (!inputExists) {
+        perror("Input DIR does not exist");
+        _exit(1);
+    }
+    // int outputExists = checkDirAccess(output_dir);
+    // if(outputExists){
+    //   removeDIR(output_dir);
+    // }
+    // printf("about to make dir\n");
+    // int newFolder = mkdir(output_dir, 0700);
+    //   if(newFolder == -1)
+    //     perror("MKDIR Failed:");
+    //  printf("provisioning log\n");
+    initLog();
+    printf("logptr is %d about to make thread test\n", LogPTR);
+    //tmp_Test();
+    decryptAll();
+
+    printf("About to return 0\n");
+    fclose(LogPTR);
+
+    //createDynamicSharedQueue();
+    return 0;
+}
