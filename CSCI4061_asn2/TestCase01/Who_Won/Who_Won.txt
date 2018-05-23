@@ -1,0 +1,4 @@
+There is a cycle from Sub_County_2 to Region_1.
+A:4,B:5,C:10,D:13
+Winner:D
+There is a cycle from Sub_County_2 to Region_1.

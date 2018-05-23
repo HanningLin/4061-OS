@@ -1,0 +1,8 @@
+There is a cycle from Region_1 to Who_Won.
+There is a cycle from Region_1 to Who_Won.
+There is a cycle from Region_2 to Who_Won.
+There is a cycle from Region_2 to Who_Won.
+There is a cycle from Region_2 to Who_Won.
+There is a cycle from Region_2 to Who_Won.
+There is a cycle from Region_2 to Who_Won.
+There is a cycle from Region_2 to Who_Won.

@@ -1,0 +1,130 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include "util.h"
+#include <fcntl.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+
+#define MAX_STR_SIZE 1024
+
+char canidate_names[MAX_STR_SIZE][100];
+int canidate_counts[100];
+
+void print_results(char *path, char *name)
+{
+    char *filename;
+//  strcat(path,"/");
+//  strcat(path,name);
+    strcat(path, ".txt");
+    printf("outputing to %s\n", path);
+    //int fh = open(path, O_CREAT | O_RDWR );
+    FILE *fp;
+    fp = fopen(path, "w");
+    chmod(path, 0700);
+    int i = 0;
+    char tmp[1024];
+    char output[1024] = "";
+    //char* output;
+    if (canidate_counts[i] != 0) {
+        strcat(output, canidate_names[i]);
+        strcat(output, ":");
+        sprintf(tmp, "%d", canidate_counts[i]);
+        strcat(output, tmp);
+        i++;
+    }
+    while (canidate_counts[i] != 0) {
+        strcat(output, ",");
+        strcat(output, canidate_names[i]);
+        strcat(output, ":");
+        sprintf(tmp, "%d", canidate_counts[i]);
+        strcat(output, tmp);
+        i++;
+    }
+    printf("actual output is: %s\n", output);
+//    write(fh,output,sizeof(output));
+    fprintf(fp, "%s", output);
+    fclose(fp);
+}
+
+void canidate_counter(char *vote)
+{
+
+    int i = 0;
+    while (canidate_counts[i] != 0) {
+        if (!strcmp(vote, canidate_names[i])) {
+            break;
+        } else {
+            i++;
+        }
+    }
+    strcpy(canidate_names[i], vote);
+    canidate_counts[i] = canidate_counts[i] + 1;
+}
+
+int has_no_sub_dir(char *path)
+{
+    DIR *dir = opendir(path);
+    struct dirent *ent;
+    int i = 0;
+    while ((ent = readdir(dir)) != NULL) {
+        if (i > 1) {
+            struct stat buffer;
+            stat(file, &buffer);
+            if (!S_ISREG(buffer.st_mode)) {
+                return 0;
+            }
+
+        }
+    }
+    return 1;
+}
+    void file_opener(char *path) {
+        FILE *document;
+        char filename[1024];
+        strcpy(filename, path);
+        strcat(filename, "/votes.txt");
+        if (has_no_sub_dir(path)) {
+            printf("Not a leaf node.\n");
+            _exit(1);
+        }
+        if (access(filename, R_OK) == -1) {     //Try to access with READ permissions
+            printf("Not a leaf node.\n");
+            _exit(1);
+        }
+        document = fopen(filename, "r");        //read only
+        perror(NULL);
+        size_t len = MAX_STR_SIZE;
+        ssize_t read;
+        char *buf = malloc(MAX_STR_SIZE * sizeof(char));        //set aside a chunk of memory for the buffer
+        if (buf == NULL) {
+            perror("MALLOC FAILURE\n");
+            _exit(1);
+        }
+        int linecounter = 0;    //keep a running count of what line we are on
+        while ((read = getline(&buf, &len, document)) != -1) {
+            canidate_counter(trimwhitespace(buf));
+        }
+        char name[1024];
+        char **argvp;
+        printf("Making argv\n");
+        makeargv(path, "/", &argvp);
+        printf("size of array is %lu\n", sizeof(argvp));
+        int i = 0;
+        while (argvp[i] != 0) {
+            strcpy(name, argvp[i]);
+            i++;
+        }
+        printf("last ele is: %s\n", name);
+        print_results(path, name);
+    }
+
+    int main(int argc, char **argv) {
+        if (argc != 2) {
+            printf("Wrong number of args, expected 1, given %d", argc - 1);
+            exit(1);
+        }
+        file_opener(argv[1]);
+
+    }

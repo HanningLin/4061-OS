@@ -1,0 +1,24 @@
+/*login: tessm061 lin00116
+* date: 03/09/18
+* name: Tyler Tessmann, Hanning Lin 
+* id:     ,5454150*/
+
+-Notice 
+ -please compile with GCC5.4
+
+-The purpose of your program
+ -There are 3 programs. The first program called Leaf_Counter.c can read the votes.txt in the leaf node, aggregate the votes for each candidates and out put the result into a file. The second program called Aggregate_Votes.c can traverse all the directory under the path provided, and if the directory is a leaf node, it will execute Leaf_Counter, if not, it will aggregate the result of it's child node and write the result into a file. The last program called Vote_Counter.c can read the output file of the aggregation and append the winner into the output file. All the programs can handle the condition that if there is a loop and append that information into the output file.
+
+-Your x500 and the x500 of your partner
+ -tessm061 lin00116
+
+-Your lecture section and your partner's lecture section
+ -Section 1,Section 1 (8am)
+
+-Your partner's and your individual contributions
+ -Tyler - Leaf_Counter and Vote_Counter
+ -Hanning - Aggregate_Votes and Loop finder (In all codes)
+ -Both did minor bug fixes during code review of others code
+
+-Specify whether you are doing the extra credit or not.
+ Yes we have succesfully implented the EC 
