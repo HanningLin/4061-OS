@@ -1,0 +1,83 @@
+First is: 4
+argument contains :
+0:4
+1:A
+2:B
+3:C
+4:D
+
+We have 4 canidates in this election
+HERE
+We have A
+We have B
+We have C
+We have D
+
+Buffer is:A B C D
+
+First is: W
+argument contains :
+0:Who_Won
+1:Region_1
+2:Region_2
+3:Region_3
+4:County_1
+5:Sub_County_1
+6:Sub_County_2
+
+init an array 7 nodes large
+Making node Who_Won
+Making node Region_1
+Making node Region_2
+Making node Region_3
+Making node County_1
+Making node Sub_County_1
+Making node Sub_County_2
+First is: W
+argument contains :
+0:Who_Won
+1::
+2:Region_1
+3:Region_2
+4:Region_3
+
+Making node Region_1 a child of Who_Won
+Just went to Region_1
+Find Father
+Making node Region_2 a child of Who_Won
+Just went to Region_2
+Find Father
+Making node Region_3 a child of Who_Won
+Just went to Region_3
+Find Father
+
+END!!!!
+First is: R
+argument contains :
+0:Region_1
+1::
+2:County_1
+
+Making node County_1 a child of Region_1
+Just went to County_1
+Find Father
+
+END!!!!
+First is: C
+argument contains :
+0:County_1
+1::
+2:Sub_County_1
+3:Sub_County_2
+
+Making node Sub_County_1 a child of County_1
+Just went to Sub_County_1
+Find Father
+Making node Sub_County_2 a child of County_1
+Just went to Sub_County_2
+Find Father
+
+END!!!!
+Find dups of: Region_1
+There is a loop!
+

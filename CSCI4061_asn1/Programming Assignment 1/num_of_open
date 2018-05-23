@@ -1,0 +1,58 @@
+{
+    if (buf == NULL) {
+    while ((read = getline(&buf, &len, document)) != -1) {
+        if (buf[0] == '#') {
+        } else {
+    if (findDAG_Loop()) {
+    for (int i = 0; i < *numofnodes; i++) {
+{
+    for (i = 0; i < numtokens; i++) {
+{
+{
+    for (i = 0; i < numofnodes; i++) {
+        if (!strcmp(node[i].name, fathername)) {
+            for (int j = 0; j < numofnodes; j++) {
+                if (!strcmp(node[j].name, childname)) {
+{
+    for (i = 0; i < node[num].num_children; i++) {
+        {
+        {
+{
+    for (int i = 0; i < numofnodes; i++) {
+        if (n > max_num_of_descendent) {
+{
+    if ((numtokens = makeargv(text, delim, &argvp)) == -1) {
+//    for (i = 0; i < numtokens; i++) {
+    if (linecounter == 0) {
+        if (isdigit(text[0])) {
+            for (i = 1; i < numtokens; i++) {
+        } else {
+    } else if (linecounter == 1) {
+        {
+            for (i = 0; i < numtokens; i++) {
+        } else {
+    } else {                    //attach children
+        for (i = 2; i < numtokens; i++) {
+{
+    while (firstnode[root_id].num_children > i) {
+        if (firstnode[id].num_children == 0) {
+            if (pid < 0) {
+            } else if (pid > 0) {
+            } else {
+                char *argarr[60];       // = { "leafcounter", inputF, outputF, "4", "A", "B", "C", "D", (char *)NULL };
+                while (can_names[j] != NULL) {
+        } else {
+            if (pida > 0) {
+            } else {
+    while (firstnode[root_id].num_children > i) {
+    while (can_names[j] != NULL) {
+    if (!strcmp(argarr[i + 3], "Output_Who_Won")) {
+    } else {
+{
+    while (i < j) {
+        while (ii < j) {
+            if (!strcmp(visited[i], visited[ii]) && i != ii) {
+{
+    if (argc != 2) {
+    for (int i = 0; i < numofnodes; i++) {
+        if (firstnode[i].num_children != 0) {

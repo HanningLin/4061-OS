@@ -1,0 +1,40 @@
+/*login: tessm061 lin00116
+* date: 02/18/18
+* name: Tyler Tessmann, Hanning Lin */
+
+- The purpose of your program
+Our program will count votes from files designated by input.txt 
+It will find nodes ready to exucute, and use fork() and exec() 
+to run the precompiled exucutables feeding in the right inputs.  
+
+- How to compile the program
+$>make
+## This is the same as the below. You MUST use gcc 5.4.0
+## /usr/bin/gcc -std=c99 -w -o votecounter votecounter.c
+
+- How to use the program from the shell (syntax)
+## You can copy the exuctable into your Test here
+$>./votecounter input.txt
+
+- What exactly your program does
+The program first use the input.txt provided to make a tree structure. And then the program go through all the nodes from the root node of the tree to the leaf nodes using recursion. The program use the fork to creat a new process and exce the "leafcounter" to count the result of the leaf region. If that finished, the parent region call the "aggregate_votes" to aggregate the results of leaf regions. If all the parent node is done, then the root region will call the "find_winner" to aggregate the results of parent regions and find the winner.
+
+- Your x500 and the x500 of your partner
+Tyler Tessmann (tessm061)
+Hanning Lin (lin00116)
+
+- Your and your partner’s individual contributions
+Tyler Tessmann (tessm061)
+ Made the GITHUB project and shared it.
+ Made parseInput, to deal with File IO.
+ Made most of parseInputLine, to read each line for their certain syntax and do error checking. Node operations are done by Hanning.
+ Made and Typed execNodes up to leafcounter with Hanning. Everything to do with aggregatevotes and whowon was indivual.
+ Made findDag_Loop do find loops in the DAG structure.
+
+Hanning Lin (lin00116)
+ Decide and build the node structure.
+ Split each line of the input file and get the useful information.
+ Made makeNodes, to make each node according to the input file.
+ Made the buildtree, to link each node and build a tree structure.
+ Made findroot, to find the root node of the tree sturcture.
+ Made and Typed execNodes up to leafcounter with Tyler.
