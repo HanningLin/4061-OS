@@ -2,7 +2,7 @@
 - login: lin00116 tessm061 
 - date: 04/30/18
 - name: Hanning Lin, Tyler Tessmann
-- Extra credit [YES]*/
+- Extra credit [YES]
 
 ## The purpose of your program
  - It will have 1 main server to hold the election data
